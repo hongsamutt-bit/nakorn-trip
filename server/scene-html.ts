@@ -1,0 +1,15 @@
+export const sceneHtml = `<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>นครทริป · 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=Noto+Serif+Thai:wght@500;600&display=swap">
+<link rel="stylesheet" href="/viewer/scene.css"><script type="importmap">{"imports":{"three":"/viewer/vendor/three.module.js","three/addons/controls/OrbitControls.js":"/viewer/vendor/OrbitControls.js"}}</script></head>
+<body>
+<main id="experience" aria-label="สถานที่จำลองสามมิติ">
+<div class="scene-heading"><span class="live-dot" aria-hidden="true"></span><strong id="viewLabel">กำลังเปิด…</strong><span class="compass" aria-label="เข็มทิศ ลูกศรชี้ทิศเหนือ"><span id="compassNeedle">↑</span>N</span></div>
+<div class="light-controls" role="group" aria-label="ช่วงเวลา"><button data-light="day" aria-pressed="true">☀︎ กลางวัน</button><button data-light="sunset" aria-pressed="false">◐ ยามเย็น</button><button data-light="night" aria-pressed="false">☾ กลางคืน</button></div>
+<div id="viewport"><div id="loading" role="status"><span class="spinner"></span><strong>กำลังเปิดสถานที่ 3D</strong><span>รอสักครู่ แล้วลากเพื่อหมุนชมได้เลย</span></div><div id="hotspots" aria-label="จุดน่าสนใจ"></div></div>
+<div class="zoom-controls" role="group" aria-label="ซูม"><button id="zoomIn" aria-label="ซูมเข้า">+</button><button id="zoomOut" aria-label="ซูมออก">−</button><button id="resetBtn" aria-label="คืนค่ามุมมอง">↺</button></div>
+<section id="partPanel" class="part-panel" aria-live="polite" hidden><button id="closePart" aria-label="ปิดรายละเอียด">×</button><strong id="partTitle"></strong><p id="partText"></p></section>
+<footer class="viewer-footer"><details class="point-list"><summary>รายการจุดน่าสนใจ</summary><ol id="pointList"></ol></details><div class="view-controls" role="group" aria-label="มุมมอง"><button data-view="front" aria-pressed="true">ด้านหน้า</button><button data-view="aerial" aria-pressed="false">มุมสูง</button><button data-view="closeup" aria-pressed="false">ระยะใกล้</button><button id="rotateBtn" aria-pressed="false"><span id="rotateIcon" aria-hidden="true">▷</span> <span id="rotateText">หมุนอัตโนมัติ</span></button></div><p class="gesture-hint">ลากเพื่อหมุน · สองนิ้วเพื่อซูม · แตะหมุดตัวเลขเพื่ออ่านข้อมูล</p><p class="model-note">แบบจำลองเชิงศิลปะจากภาพอ้างอิง · ผังพื้นที่โดยประมาณ ไม่ใช่ข้อมูลสำรวจ</p><p id="accessStatus" role="status" hidden></p></footer>
+</main><div id="expired" role="alert" hidden><span>หมดเวลาการเข้าชม</span><p>กลับไปหน้าหลักเพื่อเปิดสิทธิ์เข้าชมอีกครั้ง</p></div>
+<script type="module" src="/viewer/scene.js"></script></body></html>`;

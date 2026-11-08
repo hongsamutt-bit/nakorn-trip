@@ -1,0 +1,26 @@
+Temple photograph: 0004932 - (Phra Pathom Chedi - 001).jpg
+Photographer: Preecha.MJ (2015)
+Source: https://commons.wikimedia.org/wiki/File:0004932_-_(Phra_Pathom_Chedi_-_001).jpg
+License: Creative Commons Attribution-ShareAlike 4.0
+https://creativecommons.org/licenses/by-sa/4.0/
+The image is displayed with CSS cropping; original image content is unchanged.
+
+Three.js: MIT license, see /viewer/vendor/THREE-LICENSE.txt.
+3D temple geometry: artistic procedural reconstruction, not a measured survey.
+
+Phra Prathon Chedi photograph: Chedi Phra Pathon-1-HDR.jpg
+Photographer: Ddalbiez (2009)
+Source: https://commons.wikimedia.org/wiki/File:Chedi_Phra_Pathon-1-HDR.jpg
+License: Creative Commons Attribution-ShareAlike 3.0
+https://creativecommons.org/licenses/by-sa/3.0/
+Downscaled to 1280 px wide; displayed with CSS cropping.
+
+Phra Prathon Chedi 3D model: artistic procedural reconstruction based on public
+photographs and the descriptions cited in the app; not a measured survey.
+
+Wat Phai Lom photograph (phailom-hero.jpg): reference photo supplied by the
+app developer (PJWAD folder). Confirm you have the right to publish it, or
+replace it with your own photo, before releasing the app publicly.
+
+Wat Phai Lom 3D model: artistic procedural reconstruction based on visitor
+photographs; building positions are approximate, not a measured survey.

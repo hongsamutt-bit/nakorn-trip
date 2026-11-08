@@ -1,0 +1,13 @@
+/* Desktop presentation: the mobile app sits inside a phone frame. */
+@media (min-width:650px) {
+  body { background:radial-gradient(circle at 30% 10%,#f3efe2,#d6e1d3 70%); }
+  html[data-theme="dark"] body { background:radial-gradient(circle at 30% 10%,#22302a,#0b120f 70%); }
+  .app-shell { width:min(430px, calc(100vw - 32px)); height:min(920px, calc(100svh - 32px)); min-height:0; margin:16px auto; border:10px solid #18241e; border-radius:46px; box-shadow:0 30px 80px #1c2a2255, 0 0 0 2px #7c8c80; }
+  .app-shell:before { content:""; position:absolute; z-index:10; left:50%; top:8px; transform:translateX(-50%); width:100px; height:22px; background:#18241e; border-radius:14px; pointer-events:none; }
+  .topbar { top:0; padding-top:24px; height:92px; }
+  .page-scroll { top:92px; }
+  .bottom-nav { border-radius:0 0 36px 36px; }
+  .modal-backdrop { align-items:center; }
+  .scene-modal { inset:24px max(calc((100vw - 760px)/2), 16px); border-radius:28px; overflow:hidden; box-shadow:0 20px 80px #000a; }
+  .guest-page { margin:3vh auto; min-height:94svh; border-radius:28px; border:1px solid var(--line); padding:22px; }
+}
