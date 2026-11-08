@@ -52,6 +52,7 @@ function writePref(key: string, value: string) { try { localStorage.setItem(key,
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>("home");
   const [wallet, setWallet] = useState<WalletState>({ balance: 0, history: [] });
+  const [greet, setGreet] = useState("");
   const [modal, setModal] = useState<"topup" | "scene" | "story" | "guide" | "settings" | null>(null);
   const [templeId, setTempleId] = useState<Temple["id"] | null>(null);
   const [templeSection, setTempleSection] = useState<TempleSection>("overview");
@@ -88,6 +89,7 @@ export default function HomePage() {
   useEffect(() => {
     // Preferences and the demo wallet live in localStorage; read them after hydration.
     /* eslint-disable react-hooks/set-state-in-effect */
+    setGreet(greeting());
     setTextSize(readPref("nt-text", ["md", "lg", "xl"] as const, "md"));
     setTheme(readPref("nt-theme", ["auto", "light", "dark"] as const, "auto"));
     try { setFavorites(JSON.parse(localStorage.getItem("nt-fav") || "[]")); } catch { /* ignore */ }
@@ -176,7 +178,7 @@ export default function HomePage() {
     <div className="page-scroll" key={tab + (templeId ?? "")}>
       {<>
         {tab === "home" && <>
-          <section className="welcome"><span className="kicker">{greeting()}</span><h1>นักเดินทาง<br/><span>วันนี้อยากไปไหว้พระที่ไหนดี</span></h1></section>
+          <section className="welcome"><span className="kicker">{greet || "สวัสดี"}</span><h1>นักเดินทาง<br/><span>วันนี้อยากไปไหว้พระที่ไหนดี</span></h1></section>
           <form className="searchbox" role="search" onSubmit={e=>{e.preventDefault();setTempleId(null);setTab("temple");}}><Search size={20} aria-hidden/><input aria-label="ค้นหาวัดหรือสถานที่" placeholder="ค้นหาวัด เช่น ทวารวดี, ยายหอม" value={query} onChange={e=>setQuery(e.target.value)}/>{query&&<button type="button" aria-label="ล้างคำค้นหา" onClick={()=>setQuery("")}><X size={18}/></button>}</form>
           <div className="section-head"><div><span className="kicker">สถานที่แนะนำ</span><h2>วัดในนครปฐม</h2></div><span className="section-count">{temples.length} แห่ง</span></div>
           <div className="hero-wrap"><div className="hero-rail" role="list" ref={railRef} onScroll={onRailScroll} onPointerDown={e=>{if(e.pointerType!=="mouse")return;drag.current={x:e.clientX,left:railRef.current!.scrollLeft,moved:false};}} onPointerMove={e=>{const d=drag.current;if(!d)return;const dx=e.clientX-d.x;if(Math.abs(dx)>5){d.moved=true;railRef.current!.classList.add("dragging");railRef.current!.scrollLeft=d.left-dx;}}} onPointerUp={()=>{const d=drag.current;drag.current=null;railRef.current?.classList.remove("dragging");if(d?.moved)goSlide(slide);}} onPointerLeave={()=>{if(drag.current){drag.current=null;railRef.current?.classList.remove("dragging");goSlide(slide);}}}>{filtered.map((t,i)=><article className="hero-card" key={t.id} role="listitem"><img src={t.photo} alt={t.photoAlt} style={{objectPosition:t.photoPos}}/><div className="hero-shade"/><div className="hero-topline"><span><Sparkles size={14}/> {t.tags[0]}</span><span>{String(i+1).padStart(2,"0")} / {String(temples.length).padStart(2,"0")}</span></div><div className="hero-copy"><span className="hero-location"><MapPin size={15}/> {t.district}</span><h2>{t.name}</h2><p>{t.tagline}</p><div className="hero-actions"><button className="btn btn-light" onClick={()=>openTemple(t.id)}>ดูรายละเอียด <ArrowRight size={18}/></button><button className="btn btn-glass" onClick={()=>openScene(t,"front")}><Compass size={18}/> 3D</button></div></div><button className={`heart-float ${favorites.includes(t.id)?"on":""}`} aria-pressed={favorites.includes(t.id)} aria-label={`บันทึก${t.name}เป็นรายการโปรด`} onClick={()=>toggleFav(t)}><Heart size={20}/></button></article>)}{!filtered.length&&<div className="empty-state">ไม่พบสถานที่ที่ตรงกับ “{query}”</div>}</div>{filtered.length>1&&<><button className="rail-arrow prev" aria-label="สถานที่ก่อนหน้า" disabled={slide===0} onClick={()=>goSlide(slide-1)}><ChevronLeft size={24}/></button><button className="rail-arrow next" aria-label="สถานที่ถัดไป" disabled={slide>=filtered.length-1} onClick={()=>goSlide(slide+1)}><ChevronRight size={24}/></button></>}</div>
