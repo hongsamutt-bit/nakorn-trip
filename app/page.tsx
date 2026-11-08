@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { temples, templeById, type GuideIcon, type Temple } from "./temples";
 import FortunePage, { EXTRA_DRAW_COST } from "./Fortune";
+import { asset } from "./base";
 
 type History = { id: string; amount: number; title: string; created_at: number };
 type WalletState = { balance: number; history: History[] };
@@ -134,7 +135,7 @@ export default function HomePage() {
     if (focus) p.set("focus", focus);
     if (textSize !== "md") p.set("text", textSize);
     if (document.documentElement.dataset.theme === "dark") p.set("theme", "dark");
-    setSceneTemple(t); setSceneUrl(`/viewer/index.html?${p}`); setModal("scene");
+    setSceneTemple(t); setSceneUrl(asset(`/viewer/index.html?${p}`)); setModal("scene");
   }
   function openTemple(id: Temple["id"]) { setTempleId(id); setTempleSection("overview"); setTab("temple"); }
   function openGuide(t: Temple, key: string) { setSceneTemple(t); setActiveGuide(key); setModal("guide"); }
@@ -164,7 +165,7 @@ export default function HomePage() {
 
   return <main className="app-shell">
     <header className="topbar">
-      <button className="brand-mark" onClick={()=>{setTab("home");setTempleId(null);}} aria-label="นครทริป หน้าหลัก"><img className="brand-svg" src="/chedi-mark.svg" alt=""/><span><strong>นครทริป</strong><small>NAKHON TRIP</small></span></button>
+      <button className="brand-mark" onClick={()=>{setTab("home");setTempleId(null);}} aria-label="นครทริป หน้าหลัก"><img className="brand-svg" src={asset("/chedi-mark.svg")} alt=""/><span><strong>นครทริป</strong><small>NAKHON TRIP</small></span></button>
       <div className="top-actions">
         <button className="round-icon" aria-label="ตั้งค่าการแสดงผล ขนาดตัวอักษรและธีม" onClick={()=>setModal("settings")}><Type size={20}/></button>
         <button className="round-icon" aria-label="แชร์แอป" onClick={()=>copyText(location.origin,"คัดลอกลิงก์แอปแล้ว")}><Share2 size={19}/></button>
@@ -252,7 +253,7 @@ export default function HomePage() {
 
       {modal==="topup"&&<><span className="dialog-icon amber"><Wallet size={24}/></span><span className="kicker">DEMO CREDIT WALLET</span><h2 id="dialog-title">เติมเครดิตจำลอง</h2><p className="dialog-sub">เลือกแพ็กเกจสำหรับทดลองใช้งาน เครดิตไม่มีมูลค่าเงินจริง</p><div className="modal-packages">{packages.map(p=><button key={p.credits} aria-pressed={selectedPack===p.credits} className={selectedPack===p.credits?"selected":""} onClick={()=>setSelectedPack(p.credits)}><span aria-hidden>{p.icon}</span><b>{p.credits}</b><small>เครดิต</small>{selectedPack===p.credits&&<Check size={16}/>}</button>)}</div><div className="simulation-banner"><ShieldCheck size={20}/><span><b>การทำรายการนี้เป็นการจำลอง</b><small>ไม่มีการเชื่อมต่อธนาคาร บัตร หรือระบบชำระเงิน</small></span></div><button className="btn btn-gold full" onClick={topup}>ยืนยันเติม {selectedPack} เครดิต<ArrowRight size={18}/></button></>}
 
-      {modal==="story"&&<><span className="dialog-icon"><BookOpen size={24}/></span><span className="kicker">ABOUT NAKHON TRIP</span><h2 id="dialog-title">เกี่ยวกับนครทริป</h2><p className="story-copy">นครทริปช่วยให้ทุกวัยเตรียมตัวไปไหว้พระในนครปฐมได้ง่ายขึ้น ด้วยเรื่องราว บทสวด และแบบจำลอง 3D ที่หมุนดูได้รอบทิศ</p><p className="story-copy">โมเดลและผัง 3D เป็นแบบจำลองเชิงศิลป์จากภาพอ้างอิง เพื่อการชมและสำรวจ รายละเอียดบางส่วนเป็นการประมาณ ไม่ใช่ข้อมูลสแกนหรือแบบสำรวจ</p>{temples.map(t=><div className="sources" key={t.id}><span className="kicker">{t.name}</span>{t.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noreferrer">{s.label} <ExternalLink size={15}/></a>)}</div>)}<div className="sources"><a href="/asset-credits.txt" target="_blank">เครดิตภาพและโมเดลทั้งหมด <ExternalLink size={15}/></a></div></>}
+      {modal==="story"&&<><span className="dialog-icon"><BookOpen size={24}/></span><span className="kicker">ABOUT NAKHON TRIP</span><h2 id="dialog-title">เกี่ยวกับนครทริป</h2><p className="story-copy">นครทริปช่วยให้ทุกวัยเตรียมตัวไปไหว้พระในนครปฐมได้ง่ายขึ้น ด้วยเรื่องราว บทสวด และแบบจำลอง 3D ที่หมุนดูได้รอบทิศ</p><p className="story-copy">โมเดลและผัง 3D เป็นแบบจำลองเชิงศิลป์จากภาพอ้างอิง เพื่อการชมและสำรวจ รายละเอียดบางส่วนเป็นการประมาณ ไม่ใช่ข้อมูลสแกนหรือแบบสำรวจ</p>{temples.map(t=><div className="sources" key={t.id}><span className="kicker">{t.name}</span>{t.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noreferrer">{s.label} <ExternalLink size={15}/></a>)}</div>)}<div className="sources"><a href={asset("/asset-credits.txt")} target="_blank">เครดิตภาพและโมเดลทั้งหมด <ExternalLink size={15}/></a></div></>}
 
       {modal==="guide"&&(()=>{const g=guideTemple.guides[activeGuide];const Icon=guideIcons[g.icon];return <><span className={`dialog-icon ${guideTone[g.icon]}`}><Icon size={24}/></span><span className="kicker">{guideTemple.name} · คู่มือเดินชม</span><h2 id="dialog-title">{g.title}</h2><p className="dialog-sub">{g.subtitle}</p>{g.body.map((p,i)=><p className="story-copy" key={i}>{p}</p>)}{activeGuide==="chants"&&<div className="chant-preview in-dialog">{guideTemple.chants.map(c=><div key={c.title}><span className="kicker">{c.title}</span>{c.note&&<small>{c.note}</small>}<p>{c.lines.map(l=><span key={l}>{l}<br/></span>)}</p></div>)}</div>}<div className="guide-tip"><Compass size={18}/><span>{g.tip}</span></div>{activeGuide==="chants"&&<button className="btn btn-outline full copy-chant" onClick={()=>copyText(chantText(guideTemple),"คัดลอกบทสวดแล้ว")}><Copy size={18}/> คัดลอกบทสวด</button>}<button className="btn btn-green full guide-3d" onClick={()=>{setModal(null);openScene(guideTemple,"map",g.focus);}}><Map size={18}/> ดูตำแหน่งนี้ใน 3D <ArrowRight size={18}/></button>{(activeGuide==="history"||activeGuide==="architecture")&&<div className="sources">{guideTemple.sources.map(s=><a key={s.url} href={s.url} target="_blank" rel="noreferrer">{s.label} <ExternalLink size={15}/></a>)}</div>}</>;})()}
     </section></div>}

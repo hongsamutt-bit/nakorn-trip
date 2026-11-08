@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./mockup.css";
+import { asset } from "./base";
 
 export const metadata: Metadata = {
   title: "นครทริป · เที่ยววัดในมุมใหม่",
   description: "สำรวจพระปฐมเจดีย์และพระประโทณเจดีย์แบบสามมิติ พร้อมเรื่องราว บทสวด และคู่มือเดินชมที่อ่านง่ายสำหรับทุกวัย",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: asset("/favicon.svg"),
+    shortcut: asset("/favicon.svg"),
   },
 };
 

@@ -33,12 +33,14 @@ npm run dev
 
 เปิด <http://localhost:3000> (บน Windows ดับเบิลคลิก `START-LOCAL.cmd` ได้เลย)
 
-รันแบบ production:
+สร้างเว็บแบบ static (ได้โฟลเดอร์ `out/`) แล้วเปิดดู:
 
 ```bash
 npm run build
-npm start
+npm run preview
 ```
+
+**เผยแพร่บน GitHub Pages:** push ขึ้น branch `main` แล้ว GitHub Actions (`.github/workflows/deploy.yml`) จะ build และเผยแพร่ให้อัตโนมัติ ตั้งค่า Settings → Pages → Source เป็น **GitHub Actions** ครั้งแรกครั้งเดียว
 
 แอปเป็นหน้าเว็บแบบ static ทั้งหมด จึงนำไปวางบน Vercel, Netlify หรือ GitHub Pages ได้
 

@@ -1,3 +1,4 @@
+import { asset } from "./base";
 // Temple catalogue. To add a temple: add an entry here, add a builder in
 // public/viewer/sites/<id>.js, and register it in SITES inside public/viewer/scene.js.
 
@@ -37,7 +38,7 @@ export const temples: Temple[] = [
     short: "ปฐม",
     fullName: "วัดพระปฐมเจดีย์ราชวรมหาวิหาร",
     en: "PHRA PATHOM CHEDI",
-    photo: "/temple-hero.jpg",
+    photo: asset("/temple-hero.jpg"),
     photoAlt: "องค์พระปฐมเจดีย์สีทองในแสงยามเย็น",
     photoPos: "38% 49%",
     district: "อ.เมืองนครปฐม",
@@ -74,7 +75,7 @@ export const temples: Temple[] = [
     short: "ไผ่ล้อม",
     fullName: "วัดไผ่ล้อม นครปฐม",
     en: "WAT PHAI LOM",
-    photo: "/phailom-hero.jpg",
+    photo: asset("/phailom-hero.jpg"),
     photoAlt: "อุโบสถวัดไผ่ล้อม หน้าบันปิดทองประดับกระจก มีซุ้มประตูและยักษ์ทวารบาล",
     photoPos: "45% 40%",
     district: "ต.พระปฐมเจดีย์ อ.เมืองนครปฐม",
@@ -109,7 +110,7 @@ export const temples: Temple[] = [
       { label: "ไทยรัฐ · วัดไผ่ล้อม หลวงพี่น้ำฝน", url: "https://www.thairath.co.th/lottery/news/2389790" },
       { label: "Wongnai · วัดไผ่ล้อม นครปฐม", url: "https://www.wongnai.com/attractions/1675215QZ-%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%84%E0%B8%9C%E0%B9%88%E0%B8%A5%E0%B9%89%E0%B8%AD%E0%B8%A1-%E0%B8%99%E0%B8%84%E0%B8%A3%E0%B8%9B%E0%B8%90%E0%B8%A1" },
       { label: "Dhamma Path · Wat Pailom (บล็อก)", url: "https://dhammapath.blogspot.com/2016/07/revisited-wat-pailom-lp-poon-lp-namfon.html" },
-      { label: "ป้ายคาถาและนิทรรศการในวัด (ภาพถ่ายอ้างอิง)", url: "/asset-credits.txt" },
+      { label: "ป้ายคาถาและนิทรรศการในวัด (ภาพถ่ายอ้างอิง)", url: asset("/asset-credits.txt") },
     ],
   },
   {
@@ -118,7 +119,7 @@ export const temples: Temple[] = [
     short: "ประโทณ",
     fullName: "วัดพระประโทณเจดีย์วรวิหาร",
     en: "PHRA PRATHON CHEDI",
-    photo: "/prathon-hero.jpg",
+    photo: asset("/prathon-hero.jpg"),
     photoAlt: "พระประโทณเจดีย์ ฐานอิฐสีส้มแดงซ้อนชั้น มีปรางค์สีขาวอยู่บนยอด",
     photoPos: "50% 30%",
     district: "ต.พระประโทน อ.เมืองนครปฐม",
