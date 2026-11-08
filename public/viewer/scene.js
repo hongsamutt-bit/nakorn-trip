@@ -13,17 +13,19 @@ if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'da
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: false });
+  renderer = new THREE.WebGLRenderer({ antialias: devicePixelRatio < 2, alpha: true, powerPreference: 'high-performance' });
 } catch {
   $('#loading').innerHTML = '<strong>อุปกรณ์นี้ยังเปิดมุมมอง 3D ไม่ได้</strong><span>ลองเปิดด้วย Chrome, Edge หรือ Safari ที่รองรับ WebGL</span>';
   throw new Error('WebGL unavailable');
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 600 ? 1.45 : 1.8));
+renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 600 ? 1.5 : 1.25));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.autoUpdate = false; // the scene is static: redraw shadows only when the sun moves
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
 viewport.append(renderer.domElement);
+if (params.has('stats')) window.__renderer = renderer;
 renderer.domElement.tabIndex = 0;
 renderer.domElement.setAttribute('aria-label', 'ลากเพื่อหมุน ใช้ล้อเมาส์หรือสองนิ้วเพื่อซูม ปุ่มลูกศรบนแป้นพิมพ์ก็ใช้หมุนได้');
 
@@ -35,14 +37,45 @@ Object.assign(controls, { enableDamping: true, dampingFactor: .065, minDistance:
 const hemi = new THREE.HemisphereLight('#f7f6e9', '#a2a58c', 2.5); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff2d3', 3.8);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow, { normalBias: .15, bias: -.0002, radius: 4 });
+sun.shadow.mapSize.set(1024, 1024);
+Object.assign(sun.shadow, { normalBias: .2, bias: -.0004 });
 scene.add(sun);
 const fill = new THREE.DirectionalLight('#dae8eb', 1.2); fill.position.set(110, 65, -100); scene.add(fill);
 const model = new THREE.Group(); scene.add(model);
 
 const kit = createKit(renderer, model);
 const site = (await SITES[siteKey]()).build(kit);
+mergeStatic(model);
+
+// Merge every static mesh that shares a material into one draw call (hundreds of calls -> a few dozen).
+function mergeStatic(root) {
+  root.updateMatrixWorld(true);
+  const inv = root.matrixWorld.clone().invert(), groups = new Map(), old = [];
+  root.traverse(o => {
+    if (!o.isMesh || Array.isArray(o.material)) return;
+    const key = `${o.material.uuid}|${o.castShadow}|${o.receiveShadow}`;
+    if (!groups.has(key)) groups.set(key, { material: o.material, cast: o.castShadow, receive: o.receiveShadow, parts: [] });
+    const m = inv.clone().multiply(o.matrixWorld);
+    const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(m);
+    if (m.determinant() < 0) { // mirrored parts: flip winding so faces stay outward
+      for (const a of Object.values(g.attributes)) for (let i = 0; i < a.count; i += 3) for (let k = 0; k < a.itemSize; k++) { const t = a.array[(i + 1) * a.itemSize + k]; a.array[(i + 1) * a.itemSize + k] = a.array[(i + 2) * a.itemSize + k]; a.array[(i + 2) * a.itemSize + k] = t; }
+    }
+    groups.get(key).parts.push(g); old.push(o);
+  });
+  for (const o of old) { o.parent.remove(o); o.geometry.dispose(); }
+  for (const { material, cast, receive, parts } of groups.values()) {
+    const total = parts.reduce((n, g) => n + g.attributes.position.count, 0);
+    const out = new THREE.BufferGeometry();
+    for (const [name, size] of [['position', 3], ['normal', 3], ['uv', 2]]) {
+      const arr = new Float32Array(total * size); let off = 0;
+      for (const g of parts) { const a = g.attributes[name]; if (a) arr.set(a.array, off); off += g.attributes.position.count * size; }
+      out.setAttribute(name, new THREE.BufferAttribute(arr, size));
+    }
+    parts.forEach(g => g.dispose());
+    out.computeBoundingSphere();
+    const mesh = new THREE.Mesh(out, material); mesh.castShadow = cast; mesh.receiveShadow = receive; mesh.matrixAutoUpdate = false; root.add(mesh);
+  }
+}
 document.title = `${site.title} · 3D · นครทริป`;
 $('#experience').setAttribute('aria-label', `สถานที่จำลอง${site.title}สามมิติ`);
 
@@ -77,7 +110,7 @@ const list = $('#pointList');
 if (list) site.hotspots.forEach((h, i) => { const li = document.createElement('li'); const b = document.createElement('button'); b.type = 'button'; b.textContent = `${i + 1}. ${h.label}`; b.addEventListener('click', () => document.querySelector(`#hotspots [data-part="${h.key}"]`).click()); li.append(b); list.append(li); });
 
 const initialView = params.get('mode') === 'map' ? 'aerial' : 'front';
-let currentView = initialView, transition = null, disposed = false, suspended = false;
+let currentView = initialView, transition = null, disposed = false, dirty = true;
 const viewDirections = { front: new THREE.Vector3(.28, .33, 1), aerial: new THREE.Vector3(.02, 1, .025), closeup: new THREE.Vector3(.65, .23, 1) };
 const fitPoints = [];
 for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) fitPoints.push(new THREE.Vector3(x, y, z));
@@ -133,8 +166,9 @@ const uplights = site.uplights.map(u => { const l = new THREE.SpotLight(u.color,
 function setLight(key) {
   const v = lighting[key]; document.body.classList.toggle('night', key === 'night');
   scene.fog.color.set(v.sky); sun.color.set(v.sun); sun.intensity = v.power; sun.position.set(...v.pos); hemi.intensity = v.hemi; fill.intensity = v.fill; renderer.toneMappingExposure = v.exposure;
-  uplights.forEach(l => l.intensity = key === 'night' ? l.userData.power : 0);
-  site.warmLamps.forEach(l => l.intensity = key === 'night' ? 45 : 0);
+  uplights.forEach(l => { l.intensity = l.userData.power; l.visible = key === 'night'; });
+  site.warmLamps.forEach(l => { l.intensity = 45; l.visible = key === 'night'; });
+  renderer.shadowMap.needsUpdate = true; dirty = true;
   viewport.style.background = key === 'sunset' ? 'radial-gradient(ellipse,#efd7b944,transparent 70%)' : 'transparent';
   document.querySelectorAll('[data-light]').forEach(b => { const on = b.dataset.light === key; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
 }
@@ -161,7 +195,7 @@ function resize() {
   camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); renderer.setSize(r.width, r.height);
   if (Math.abs(lastWidth - r.width) > 2 || Math.abs(lastHeight - r.height) > 2) { setView(currentView, false); lastWidth = r.width; lastHeight = r.height; }
 }
-const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(viewport); resize(); setRotation(!reducedMotion && initialView !== 'aerial');
+const resizeObserver = new ResizeObserver(() => { resize(); dirty = true; }); resizeObserver.observe(viewport); resize(); setRotation(!reducedMotion && initialView !== 'aerial');
 const initialFocus = params.get('focus'); if (initialFocus && anchors[initialFocus]) setTimeout(() => document.querySelector(`#hotspots [data-part="${initialFocus}"]`)?.click(), 180);
 renderer.domElement.addEventListener('keydown', e => {
   if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-', ' '].includes(e.key)) return;
@@ -173,38 +207,24 @@ renderer.domElement.addEventListener('keydown', e => {
   if (e.key === '+') zoom(.85); if (e.key === '-') zoom(1.18); if (e.key === ' ') setRotation(true);
 });
 
-let animationFrame = 0, last = performance.now(), expiryTimer = 0, accessInterval = 0, checking = false;
-function dispose(expired = false) {
-  if (disposed) return; disposed = true; cancelAnimationFrame(animationFrame); clearInterval(accessInterval); clearTimeout(expiryTimer); resizeObserver.disconnect(); controls.dispose();
+let animationFrame = 0, last = performance.now();
+function dispose() {
+  if (disposed) return; disposed = true; cancelAnimationFrame(animationFrame); resizeObserver.disconnect(); controls.dispose();
   const textures = new Set(), materials = new Set(), geometries = new Set();
   scene.traverse(o => { if (o.geometry) geometries.add(o.geometry); if (o.material) { for (const m of (Array.isArray(o.material) ? o.material : [o.material])) { materials.add(m); for (const value of Object.values(m)) if (value && value.isTexture) textures.add(value); } } });
   textures.forEach(t => t.dispose()); materials.forEach(m => m.dispose()); geometries.forEach(g => g.dispose()); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
-  if (expired) { $('#experience').hidden = true; $('#expired').hidden = false; window.parent.postMessage({ type: 'scene-expired' }, location.origin); }
-}
-async function checkAccess() {
-  if (disposed || checking) return; checking = true;
-  const query = new URLSearchParams(); const guest = params.get('guest'); if (guest) query.set('guest', guest);
-  try {
-    const response = await fetch('/api/access' + (query.size ? '?' + query : ''), { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(10000) });
-    if (response.status === 401 || response.status === 403) { dispose(true); return; }
-    if (!response.ok) throw new Error('Access temporarily unavailable');
-    const access = await response.json();
-    if (!Number.isFinite(access.expiresAt) || !Number.isFinite(access.serverTime)) throw new Error('Invalid access response');
-    if (access.expiresAt <= access.serverTime) { dispose(true); return; }
-    clearTimeout(expiryTimer); expiryTimer = setTimeout(() => dispose(true), Math.min(access.expiresAt - access.serverTime, 2147483647));
-    suspended = false; renderer.domElement.style.visibility = 'visible'; hotspotWrap.hidden = false; $('#accessStatus').hidden = true;
-  } catch {
-    suspended = true; renderer.domElement.style.visibility = 'hidden'; hotspotWrap.hidden = true; $('#accessStatus').textContent = 'กำลังตรวจสอบการเชื่อมต่อ กรุณารอสักครู่'; $('#accessStatus').hidden = false;
-  } finally { checking = false; }
 }
 const hotspotButtons = [...document.querySelectorAll('#hotspots [data-part]')];
-const projected = new THREE.Vector3();
+const projected = new THREE.Vector3(), lastCam = new THREE.Matrix4();
 function animate(now) {
   if (disposed) return; animationFrame = requestAnimationFrame(animate);
-  if (document.hidden || suspended) { last = now; return; }
+  if (document.hidden) { last = now; return; }
   const dt = Math.min((now - last) / 1000, .05); last = now;
   if (transition) { const t = Math.min((now - transition.start) / 850, 1), ease = t * t * (3 - 2 * t); camera.position.lerpVectors(transition.from, transition.to, ease); controls.target.lerpVectors(transition.fromTarget, transition.toTarget, ease); if (t === 1) transition = null; }
   controls.update(dt); camera.updateMatrixWorld();
+  // Only draw when something actually moved: saves battery and keeps phones cool.
+  if (!dirty && lastCam.equals(camera.matrixWorld)) return;
+  dirty = false; lastCam.copy(camera.matrixWorld);
   hotspotWrap.classList.toggle('compact', camera.position.distanceTo(controls.target) > site.closeup.distance * 1.35 || viewport.clientWidth < 420 && camera.position.distanceTo(controls.target) > site.closeup.distance);
   $('#compassNeedle').style.transform = `rotate(${-Math.atan2(camera.position.x, camera.position.z) * 180 / Math.PI}deg)`;
   for (const button of hotspotButtons) {
@@ -214,7 +234,5 @@ function animate(now) {
   }
   renderer.render(scene, camera);
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { suspended = true; void checkAccess(); } });
 window.addEventListener('pagehide', () => dispose());
 renderer.render(scene, camera); $('#loading').remove(); animationFrame = requestAnimationFrame(animate);
-accessInterval = setInterval(checkAccess, 15000); void checkAccess();

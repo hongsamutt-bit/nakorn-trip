@@ -99,7 +99,7 @@ export function build(kit) {
   }
   lineTube([[0, cy + 5, 0], [0, cy + 7.2, 0]], .06, gilded);
   for (const s of [-1, 1]) lineTube([[0, cy + 5.6, 0], [s * .45, cy + 6.1, 0], [s * .5, cy + 6.8, 0]], .045, gilded);
-  sphere(.28, 0, cy + 5.1, 0, new THREE.MeshPhysicalMaterial({ color: '#fff8e4', roughness: .05, transmission: .6, thickness: .5, metalness: 0 }));
+  sphere(.28, 0, cy + 5.1, 0, new THREE.MeshStandardMaterial({ color: '#fff8e4', emissive: '#6b5a2c', roughness: .1, metalness: .2 }));
   const topY = cy + 7.2;
 
   // Four niches around the bell.

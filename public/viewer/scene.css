@@ -43,14 +43,12 @@ button:disabled{opacity:.5}
 #hotspots button b{width:26px;height:26px;border-radius:50%;background:#fff;color:var(--brand);display:grid;place-items:center;font-size:.9em}
 #hotspots button.active{background:#b4572de6;z-index:2}
 #hotspots button.active b{color:#b4572d}
-#loading,#expired{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);z-index:10;text-align:center;padding:20px}
-#loading strong,#expired>span{font-family:var(--serif);font-size:1.25em;color:var(--brand)}
-#loading>span:last-child,#expired p{font-size:.9em;color:var(--muted);line-height:1.8}
-#expired{position:fixed}
-#accessStatus{font-size:.8em;color:#a5612a;margin:5px 0 0}
+#loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);z-index:10;text-align:center;padding:20px}
+#loading strong{font-family:var(--serif);font-size:1.25em;color:var(--brand)}
+#loading>span:last-child{font-size:.9em;color:var(--muted);line-height:1.8}
 .spinner{width:34px;height:34px;border:3px solid #cdd8c5;border-top-color:var(--brand);border-radius:50%;animation:spin 1s linear infinite}
 .night,:root[data-theme="dark"] body{--bg:#16211d;--bg2:#1d2b26;--ink:#eef1e8;--muted:#a9b5ab;--card:#22312b;--line:#33453d}
-.night #experience,.night #loading,.night #expired{background:radial-gradient(ellipse at 50% 40%,#2d3c37,#141e1a)}
+.night #experience,.night #loading{background:radial-gradient(ellipse at 50% 40%,#2d3c37,#141e1a)}
 .night .light-controls,.night .zoom-controls{background:#22312bf0}
 .night .zoom-controls button{color:#e6d3a8}
 .night .part-panel{background:#22312bf7}

@@ -5,7 +5,10 @@ export function createKit(renderer, model) {
   let seed = 137;
   const random = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
   const reseed = s => { seed = s; };
-  const aniso = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+  const aniso = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
+  // Low-poly budget: every round shape is capped so phones stay smooth.
+  const TEX = 512;
+  const seg = (n, max) => Math.max(3, Math.min(n, max));
 
   function finishTexture(c) {
     const tex = new THREE.CanvasTexture(c);
@@ -17,8 +20,8 @@ export function createKit(renderer, model) {
 
   // Glazed tiles (gold), roof tiles (roof) and paving (floor).
   function tileTexture(kind = 'gold') {
-    const c = document.createElement('canvas'); c.width = 1024; c.height = 1024;
-    const x = c.getContext('2d');
+    const c = document.createElement('canvas'); c.width = c.height = TEX;
+    const x = c.getContext('2d'); x.scale(TEX / 1024, TEX / 1024);
     const roof = kind === 'roof', floor = kind === 'floor';
     x.fillStyle = floor ? '#b8b5a6' : roof ? '#643e23' : '#7b542a'; x.fillRect(0, 0, 1024, 1024);
     const tw = floor ? 128 : roof ? 32 : 64, th = floor ? 128 : roof ? 64 : 32;
@@ -47,8 +50,8 @@ export function createKit(renderer, model) {
 
   // Weathered Dvaravati brick: long thin bricks, dark mortar, soot and lichen stains.
   function brickTexture() {
-    const c = document.createElement('canvas'); c.width = c.height = 1024;
-    const x = c.getContext('2d');
+    const c = document.createElement('canvas'); c.width = c.height = TEX;
+    const x = c.getContext('2d'); x.scale(TEX / 1024, TEX / 1024);
     x.fillStyle = '#5a2f1d'; x.fillRect(0, 0, 1024, 1024);
     const bw = 64, bh = 20;
     for (let row = 0; row < 1024 / bh; row++) {
@@ -82,8 +85,8 @@ export function createKit(renderer, model) {
 
   // Lime plaster with grime gathering under every ledge.
   function plasterTexture() {
-    const c = document.createElement('canvas'); c.width = c.height = 512;
-    const x = c.getContext('2d');
+    const c = document.createElement('canvas'); c.width = c.height = TEX / 2;
+    const x = c.getContext('2d'); x.scale(TEX / 1024, TEX / 1024);
     x.fillStyle = '#efede6'; x.fillRect(0, 0, 512, 512);
     for (let i = 0; i < 260; i++) {
       x.fillStyle = random() > .55 ? '#9a978d14' : '#ffffff22';
@@ -113,8 +116,8 @@ export function createKit(renderer, model) {
   function mesh(geometry, material, parent = model, cast = false) {
     const m = new THREE.Mesh(geometry, material); m.castShadow = cast; m.receiveShadow = true; parent.add(m); return m;
   }
-  function cylinder(r1, r2, height, y, material, parent = model, radial = 128) {
-    const m = mesh(new THREE.CylinderGeometry(r1, r2, height, radial), material, parent); m.position.y = y; return m;
+  function cylinder(r1, r2, height, y, material, parent = model, radial = 28) {
+    const m = mesh(new THREE.CylinderGeometry(r1, r2, height, seg(radial, 28)), material, parent); m.position.y = y; return m;
   }
   function box(w, h, d, x, y, z, material, parent = model, cast = false) {
     const m = mesh(new THREE.BoxGeometry(w, h, d), material, parent, cast); m.position.set(x, y, z); return m;
@@ -123,17 +126,17 @@ export function createKit(renderer, model) {
   function wbox(w, h, d, x, y, z, material, parent = model, cast = true, s = 4) {
     const m = mesh(worldUV(new THREE.BoxGeometry(w, h, d), w, h, d, s), material, parent, cast); m.position.set(x, y, z); return m;
   }
-  function lathe(points, material, parent = model, segments = 192, cast = true) {
-    return mesh(new THREE.LatheGeometry(points.map(p => new THREE.Vector2(...p)), segments), material, parent, cast);
+  function lathe(points, material, parent = model, segments = 36, cast = true) {
+    return mesh(new THREE.LatheGeometry(points.map(p => new THREE.Vector2(...p)), seg(segments, 36)), material, parent, cast);
   }
-  function torus(radius, tube, y, material, parent = model, segments = 192) {
-    const m = mesh(new THREE.TorusGeometry(radius, tube, 8, segments), material, parent); m.rotation.x = Math.PI / 2; m.position.y = y; return m;
+  function torus(radius, tube, y, material, parent = model, segments = 36) {
+    const m = mesh(new THREE.TorusGeometry(radius, tube, 4, seg(segments, 36)), material, parent); m.rotation.x = Math.PI / 2; m.position.y = y; return m;
   }
   function lineTube(points, radius, material, parent = model, cast = false) {
-    return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 20, radius, 6, false), material, parent, cast);
+    return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 8, radius, 4, false), material, parent, cast);
   }
-  function sphere(r, x, y, z, material, parent = model, seg = 16) {
-    const m = mesh(new THREE.SphereGeometry(r, seg, Math.max(8, seg * .75 | 0)), material, parent, true); m.position.set(x, y, z); return m;
+  function sphere(r, x, y, z, material, parent = model, n = 10) {
+    const m = mesh(new THREE.SphereGeometry(r, seg(n, 10), seg(n * .6 | 0, 6)), material, parent, true); m.position.set(x, y, z); return m;
   }
 
   // Thai gable roof with chofa, bai raka and hang hong ornaments.
@@ -164,8 +167,8 @@ export function createKit(renderer, model) {
     const t = new THREE.Group(); t.position.set(x, 0, z); t.scale.setScalar(scale); parent.add(t);
     const h = 3 + random() * 2;
     cylinder(.3, .5, h, h / 2, bark, t, 8);
-    for (let j = 0; j < 4; j++) {
-      const m = mesh(new THREE.IcosahedronGeometry(2 + random() * .8, 2), foliage[j % foliage.length], t, true);
+    for (let j = 0; j < 3; j++) {
+      const m = mesh(new THREE.IcosahedronGeometry(2 + random() * .8, 0), foliage[j % foliage.length], t, true);
       m.position.set((random() - .5) * 2.7, h + j * .6, (random() - .5) * 2.7); m.scale.y = .85;
     }
     return t;
